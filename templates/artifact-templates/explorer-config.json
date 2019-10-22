@@ -1,0 +1,77 @@
+{
+  "name": "first-network",
+  "version": "1.0.0",
+  "license": "Apache-2.0",
+  "client": {
+    "tlsEnable": true,
+    "adminUser": "{{ hl_explorer_username }}",
+    "adminPassword": "{{ hl_explorer_password }}",
+    "enableAuthentication": false,
+    "organization": "{{ org }}",
+    "connection": {
+      "timeout": {
+        "peer": {
+          "endorser": "300"
+        },
+        "orderer": "300"
+      }
+    }
+  },
+  "channels": {
+    "{{ common_channel_name }}": {
+      "peers": {
+        "peer0.{{ org }}.{{ domain }}": {}
+      },
+      "connection": {
+        "timeout": {
+          "peer": {
+            "endorser": "6000",
+            "eventHub": "6000",
+            "eventReg": "6000"
+          }
+        }
+      }
+    }{% if additional_channels is defined %}{% for channel in additional_channels %}{% if org in channel.particapants %},
+  "{{ channel.name }}": {
+          "peers": {
+          {% for particapant in channel.particapants %}"peer0.{{ particapant }}.{{ domain }}":  {}{% if not loop.last %},{% endif %}{% endfor %}
+          },
+          "connection": {
+            "timeout": {
+              "peer": {
+                "endorser": "6000",
+                "eventHub": "6000",
+                "eventReg": "6000"
+              }
+            }
+          }
+  }
+{% endif %}
+{% endfor %}
+{% endif %}
+  },
+  "organizations": {
+    "{{ org }}MSP": {
+      "mspid": "{{ org }}MSP",
+      "fullpath": true,
+      "adminPrivateKey": {
+        "path": "/fabric/crypto-config/peerOrganizations/{{ org }}.{{ domain }}/users/Admin@{{ org }}.{{ domain }}/msp/keystore/server.key"
+      },
+      "signedCert": {
+        "path": "/fabric/crypto-config/peerOrganizations/{{ org }}.{{ domain }}/users/Admin@{{ org }}.{{ domain }}/msp/signcerts/Admin@{{ org }}.{{ domain }}-cert.pem"
+      }
+    }
+  },
+  "peers": {
+    "peer0.{{ org }}.{{ domain }}": {
+      "tlsCACerts": {
+        "path": "/fabric/crypto-config/peerOrganizations/{{ org }}.{{ domain }}/peers/peer0.{{ org }}.{{ domain }}/tls/ca.crt"
+      },
+      "url": "grpcs://peer0.{{ org }}.{{ domain }}:7051",
+      "eventUrl": "grpcs://peer0.{{ org }}.{{ domain }}:7053",
+      "grpcOptions": {
+        "ssl-target-name-override": "peer0.{{ org }}.{{ domain }}"
+      }
+    }
+  }
+}
